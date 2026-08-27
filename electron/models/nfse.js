@@ -1,0 +1,30 @@
+export function criarNfse({
+  nsu,
+  chave_nfse,
+  numero_nfse,
+  data_emissao,
+  competencia,
+  ambiente,
+  status,
+  prestador_id,
+  tomador_id,
+  municipio_emissao,
+  municipio_prestacao,
+  municipio_iss,
+}) {
+  return {
+    id: chave_nfse || null,
+    nsu: nsu != null ? Number(nsu) : null,
+    chave_nfse: chave_nfse || null,
+    numero_nfse: numero_nfse || null,
+    data_emissao: data_emissao || null,
+    competencia: competencia || null,
+    ambiente: ambiente || null,
+    status: status || null,
+    prestador_id: prestador_id || null,
+    tomador_id: tomador_id || null,
+    municipio_emissao: municipio_emissao || null,
+    municipio_prestacao: municipio_prestacao || null,
+    municipio_iss: municipio_iss || null,
+  };
+}
