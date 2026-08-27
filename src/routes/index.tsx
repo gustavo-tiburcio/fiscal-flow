@@ -1,24 +1,42 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Onboarding } from "@/components/onboarding/Onboarding";
+import { Dashboard } from "@/components/dashboard/Dashboard";
+import { db } from "@/lib/bridge";
+import type { Accountant } from "@/lib/domain";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Notafiscal — Gestão de notas fiscais para contadores" },
+      {
+        name: "description",
+        content:
+          "Aplicativo desktop para contadores: cadastre empresas, certificados digitais A1 e acompanhe notas fiscais com dados salvos localmente.",
+      },
+      { property: "og:title", content: "Notafiscal — Gestão de notas fiscais para contadores" },
+      {
+        property: "og:description",
+        content:
+          "Onboarding rápido, painel de métricas e cadastro de empresas com certificado digital, tudo salvo no seu computador.",
+      },
+    ],
+  }),
+  component: App,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+function App() {
+  const [accountant, setAccountant] = useState<Accountant | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      setAccountant(await db.getAccountant());
+      setReady(true);
+    })();
+  }, []);
+
+  if (!ready) return <div className="min-h-screen bg-background" />;
+  if (!accountant) return <Onboarding onDone={setAccountant} />;
+  return <Dashboard accountant={accountant} />;
 }
