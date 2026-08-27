@@ -10,8 +10,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "electron": "ELECTRON_DEV_URL=http://localhost:8080 electron .",
-    "electron:build": "vite build && electron ."
+    "electron:start": "cross-env ELECTRON_DEV_URL=http://localhost:8080 electron .",
+    "electron": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && npm run electron:start\"",
+    "electron:build": "vite build && npx electron ."
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -49,6 +50,7 @@
     "@tanstack/react-router": "1.170.18",
     "@tanstack/react-start": "1.168.32",
     "@tanstack/router-plugin": "1.168.23",
+    "better-sqlite3": "^13.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -79,6 +81,9 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.2.0",
+    "concurrently": "^10.0.5",
+    "cross-env": "^10.1.0",
+    "electron": "^44.0.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
@@ -89,7 +94,8 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "8.1.5"
+    "vite": "8.1.5",
+    "wait-on": "^9.1.0"
   },
   "main": "electron/main.cjs"
 }

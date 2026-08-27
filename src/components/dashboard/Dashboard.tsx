@@ -95,7 +95,7 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
       >
         <div className="px-6 py-7">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-            Notafiscal
+            AGNF-E
           </p>
           <p className="mt-3 text-sm font-semibold text-sidebar-foreground">{accountant.fullName}</p>
           <p className="truncate text-xs text-muted-foreground">{accountant.email}</p>

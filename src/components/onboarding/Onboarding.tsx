@@ -122,7 +122,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
     <div ref={screenRef} className="flex min-h-screen flex-col bg-background">
       <header className="flex items-center justify-between px-10 py-8">
         <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-          Notafiscal · Suíte Contábil
+          AGNF-E
         </span>
         <span className="font-mono text-[11px] text-muted-foreground">
           {String(Math.max(index, 1)).padStart(2, "0")} / 03
