@@ -56,7 +56,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", resolved === "dark");
-    document.documentElement.dataset.density = prefs.density;
+    document.documentElement.dataset["density"] = prefs.density;
   }, [resolved, prefs.density]);
 
   const set = useCallback(<K extends keyof Preferences>(key: K, value: Preferences[K]) => {
