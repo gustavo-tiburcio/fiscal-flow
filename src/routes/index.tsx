@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Onboarding } from "@/components/onboarding/Onboarding";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { db } from "@/lib/bridge";
+import { PreferencesProvider } from "@/lib/theme";
 import type { Accountant } from "@/lib/domain";
 
 export const Route = createFileRoute("/")({
@@ -36,7 +37,15 @@ function App() {
     })();
   }, []);
 
-  if (!ready) return <div className="min-h-screen bg-background" />;
-  if (!accountant) return <Onboarding onDone={setAccountant} />;
-  return <Dashboard accountant={accountant} />;
+  return (
+    <PreferencesProvider>
+      {!ready ? (
+        <div className="min-h-screen bg-background" />
+      ) : !accountant ? (
+        <Onboarding onDone={setAccountant} />
+      ) : (
+        <Dashboard accountant={accountant} />
+      )}
+    </PreferencesProvider>
+  );
 }

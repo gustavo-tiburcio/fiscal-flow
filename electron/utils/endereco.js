@@ -5,7 +5,7 @@
 export function formatarEndereco(end) {
   if (!end || typeof end !== "object") return null;
   const partes = [end.xLgr, end.nro, end.xCpl, end.xBairro, end.CEP, end.cMun, end.UF].filter(
-    Boolean
+    Boolean,
   );
   return partes.length ? partes.join(", ") : null;
 }

@@ -145,8 +145,7 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
     const valid = filtered.filter((i) => i.status !== "cancelled");
     const total = valid.reduce((sum, i) => sum + i.amount, 0);
     const last = filtered.reduce<Invoice | null>(
-      (latest, i) =>
-        !latest || new Date(i.issuedAt) > new Date(latest.issuedAt) ? i : latest,
+      (latest, i) => (!latest || new Date(i.issuedAt) > new Date(latest.issuedAt) ? i : latest),
       null,
     );
     return {
@@ -282,7 +281,9 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
                 {!collapsed && (
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">{c.name}</span>
-                    <span className="tabular block text-[11px] text-muted-foreground">{c.cnpj}</span>
+                    <span className="tabular block text-[11px] text-muted-foreground">
+                      {c.cnpj}
+                    </span>
                   </span>
                 )}
               </button>
@@ -450,18 +451,13 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left">
-                    {[
-                      "Número",
-                      "Emissão",
-                      "Destinatário",
-                      "Competência",
-                      "Valor",
-                      "Situação",
-                    ].map((h) => (
-                      <th key={h} className="field-label px-5 py-3 font-semibold">
-                        {h}
-                      </th>
-                    ))}
+                    {["Número", "Emissão", "Destinatário", "Competência", "Valor", "Situação"].map(
+                      (h) => (
+                        <th key={h} className="field-label px-5 py-3 font-semibold">
+                          {h}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 </thead>
                 <tbody>

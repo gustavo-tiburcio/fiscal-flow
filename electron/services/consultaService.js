@@ -3,11 +3,10 @@ import { buscarLoteDFe, criarAgenteHttps } from "../utils/dfeClient.js";
 import { xmlParser, encontrarArquivosXml } from "../utils/xml.js";
 import { processarDocumento } from "./processamentoService.js";
 
-
 export async function consultarNFSes(empresa, { nsuDesejado = 1, onDocument } = {}) {
   const config = criarConfigConsulta(empresa);
   const agenteHttps = criarAgenteHttps(config);
-  let nsuAtual = 1
+  let nsuAtual = 1;
   let totalDocumentos = 0;
 
   for (let i = 0; i < config.maxIteracoesPaginacao; i++) {

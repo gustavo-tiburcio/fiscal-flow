@@ -51,7 +51,9 @@ export function validarNfse(nfseObj, xmlString) {
   if (!pegar(nfseObj, ["NFSe.infNFSe.Id", "NFSe.infNFSe.chNFSe"])) {
     motivos.push("Chave de acesso não encontrada");
   }
-  if (!pegar(nfseObj, ["NFSe.infNFSe.DPS.infDPS.prest.CNPJ", "NFSe.infNFSe.DPS.infDPS.prest.CPF"])) {
+  if (
+    !pegar(nfseObj, ["NFSe.infNFSe.DPS.infDPS.prest.CNPJ", "NFSe.infNFSe.DPS.infDPS.prest.CPF"])
+  ) {
     motivos.push("Dados do prestador não encontrados");
   }
   if (!pegar(nfseObj, ["NFSe.Signature"])) {

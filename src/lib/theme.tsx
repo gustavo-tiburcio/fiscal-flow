@@ -32,7 +32,10 @@ const PreferencesContext = createContext<Ctx | null>(null);
 function readPrefs(): Preferences {
   if (typeof window === "undefined") return defaults;
   try {
-    return { ...defaults, ...(JSON.parse(window.localStorage.getItem(KEY) ?? "{}") as Preferences) };
+    return {
+      ...defaults,
+      ...(JSON.parse(window.localStorage.getItem(KEY) ?? "{}") as Preferences),
+    };
   } catch {
     return defaults;
   }
@@ -72,7 +75,10 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     setPrefs(defaults);
   }, []);
 
-  const value = useMemo<Ctx>(() => ({ ...prefs, resolved, set, reset }), [prefs, resolved, set, reset]);
+  const value = useMemo<Ctx>(
+    () => ({ ...prefs, resolved, set, reset }),
+    [prefs, resolved, set, reset],
+  );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }

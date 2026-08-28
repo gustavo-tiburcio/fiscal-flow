@@ -13,7 +13,12 @@ const steps: {
   placeholder?: string;
   type?: string;
 }[] = [
-  { key: "intro", eyebrow: "Bem-vindo", question: "Olá. Vamos começar?", hint: "Leva menos de um minuto." },
+  {
+    key: "intro",
+    eyebrow: "Bem-vindo",
+    question: "Olá. Vamos começar?",
+    hint: "Leva menos de um minuto.",
+  },
   {
     key: "fullName",
     eyebrow: "Passo 1 de 3",
@@ -65,24 +70,21 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
     return () => ctx.revert();
   }, [index]);
 
-  const advance = useCallback(
-    (next: () => void) => {
-      if (busy.current) return;
-      busy.current = true;
-      gsap.to(stageRef.current!.querySelectorAll("[data-anim]"), {
-        opacity: 0,
-        y: -14,
-        duration: 0.35,
-        ease: "power2.in",
-        stagger: 0.05,
-        onComplete: () => {
-          busy.current = false;
-          next();
-        },
-      });
-    },
-    [],
-  );
+  const advance = useCallback((next: () => void) => {
+    if (busy.current) return;
+    busy.current = true;
+    gsap.to(stageRef.current!.querySelectorAll("[data-anim]"), {
+      opacity: 0,
+      y: -14,
+      duration: 0.35,
+      ease: "power2.in",
+      stagger: 0.05,
+      onComplete: () => {
+        busy.current = false;
+        next();
+      },
+    });
+  }, []);
 
   const finish = useCallback(async () => {
     setSaving(true);
@@ -134,10 +136,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
           <p data-anim className="field-label">
             {step.eyebrow}
           </p>
-          <h1
-            data-anim
-            className="mt-4 text-[2.6rem] leading-[1.08] font-semibold text-foreground"
-          >
+          <h1 data-anim className="mt-4 text-[2.6rem] leading-[1.08] font-semibold text-foreground">
             {step.question}
           </h1>
 
