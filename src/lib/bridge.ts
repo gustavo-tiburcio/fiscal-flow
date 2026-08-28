@@ -6,14 +6,25 @@
  * No preview web, usamos um armazenamento local equivalente para que a UI
  * funcione com a mesma API assíncrona.
  */
-import type { Accountant, Company, Invoice, NewCompany } from "./domain";
+import type {
+  Accountant,
+  CertificateCredentials,
+  CertificateSelection,
+  Company,
+  Invoice,
+  InvoiceSyncResult,
+  NewCompany,
+} from "./domain";
 
 type FiscalBridge = {
   getAccountant(): Promise<Accountant | null>;
   saveAccountant(data: Accountant): Promise<Accountant>;
   listCompanies(): Promise<Company[]>;
   createCompany(data: NewCompany): Promise<Company>;
+  selectCertificate(): Promise<CertificateSelection | null>;
+  updateCompanyCertificate(companyId: number, data: CertificateCredentials): Promise<Company>;
   listInvoices(companyId?: number): Promise<Invoice[]>;
+  syncInvoices(companyId: number): Promise<InvoiceSyncResult>;
 };
 
 declare global {
@@ -51,7 +62,13 @@ function seedInvoices(companyId: number, cnpj: string): Invoice[] {
     "Argo Logística S/A",
     "Studio Marca Digital",
   ];
-  const statuses: Invoice["status"][] = ["authorized", "authorized", "pending", "authorized", "cancelled"];
+  const statuses: Invoice["status"][] = [
+    "authorized",
+    "authorized",
+    "pending",
+    "authorized",
+    "cancelled",
+  ];
   return recipients.map((recipient, i) => ({
     id: Number(`${companyId}${i + 1}`),
     companyId,
@@ -78,7 +95,11 @@ const local: FiscalBridge = {
   },
   async createCompany(data) {
     const state = read();
-    const company: Company = { ...data, id: nextId(state.companies), createdAt: new Date().toISOString() };
+    const company: Company = {
+      ...data,
+      id: nextId(state.companies),
+      createdAt: new Date().toISOString(),
+    };
     write({
       ...state,
       companies: [...state.companies, company],
@@ -86,9 +107,26 @@ const local: FiscalBridge = {
     });
     return company;
   },
+  async selectCertificate() {
+    return null;
+  },
+  async updateCompanyCertificate(companyId, data) {
+    const state = read();
+    const company = state.companies.find((item) => item.id === companyId);
+    if (!company) throw new Error("Empresa não encontrada.");
+    const updated = { ...company, ...data };
+    write({
+      ...state,
+      companies: state.companies.map((item) => (item.id === companyId ? updated : item)),
+    });
+    return updated;
+  },
   async listInvoices(companyId) {
     const invoices = read().invoices;
     return companyId ? invoices.filter((i) => i.companyId === companyId) : invoices;
+  },
+  async syncInvoices() {
+    throw new Error("A importação de NFS-e está disponível somente no aplicativo desktop.");
   },
 };
 
@@ -97,5 +135,16 @@ export const db: FiscalBridge = {
   saveAccountant: (d) => (window.fiscal ?? local).saveAccountant(d),
   listCompanies: () => (window.fiscal ?? local).listCompanies(),
   createCompany: (d) => (window.fiscal ?? local).createCompany(d),
+  selectCertificate: () => (window.fiscal ?? local).selectCertificate(),
+  updateCompanyCertificate: (id, d) => {
+    const electronBridge = window.fiscal;
+    if (electronBridge && typeof electronBridge.updateCompanyCertificate !== "function") {
+      return Promise.reject(
+        new Error("Reinicie o aplicativo desktop para carregar a atualização do certificado."),
+      );
+    }
+    return (electronBridge ?? local).updateCompanyCertificate(id, d);
+  },
   listInvoices: (id) => (window.fiscal ?? local).listInvoices(id),
+  syncInvoices: (id) => (window.fiscal ?? local).syncInvoices(id),
 };

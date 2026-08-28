@@ -55,20 +55,23 @@ export function montarObjetos({ nfseObj, nsu, xmlString }) {
     iss_retido: pegar(valoresDpsRaw, ["tribMun.tpRetISSQN"]) === "2",
   });
 
+  const ambienteGeracao = pegar(nfseObj, [`${raizNFSe}.ambGer`, `${raizDPS}.tpAmb`]);
+
   const nfse = criarNfse({
     nsu,
     chave_nfse: chaveNfse,
     numero_nfse: pegar(nfseObj, [`${raizNFSe}.nNFSe`]),
     data_emissao: pegar(nfseObj, [`${raizNFSe}.dhProc`, `${raizDPS}.dhEmi`]),
     competencia: pegar(nfseObj, [`${raizDPS}.dCompet`]),
-    ambiente:
-      pegar(nfseObj, [`${raizNFSe}.ambGer`, `${raizDPS}.tpAmb`]) === "1"
-        ? "producao"
-        : "homologacao",
+    ambiente: String(ambienteGeracao) === "1" ? "producao" : "homologacao",
     status: pegar(nfseObj, [`${raizNFSe}.cStat`]),
     prestador_id: null,
     tomador_id: null,
-    municipio_emissao: pegar(nfseObj, [`${raizDPS}.cLocEmi`, `${raizNFSe}.xLocEmi`]),
+    municipio_emissao: pegar(nfseObj, [
+      `${raizDPS}.cLocEmi`,
+      `${raizNFSe}.cLocEmi`,
+      `${raizNFSe}.xLocEmi`,
+    ]),
     municipio_prestacao: pegar(nfseObj, [`${raizDPS}.serv.cLocPrestacao`]),
     municipio_iss: pegar(nfseObj, [`${raizNFSe}.cLocIncid`]),
   });

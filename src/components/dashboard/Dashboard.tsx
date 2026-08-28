@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
-import { Building2, FileText, Plus, Search, TrendingUp, Wallet } from "lucide-react";
+import {
+  Building2,
+  FileText,
+  KeyRound,
+  Plus,
+  RefreshCw,
+  Search,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { AddCompanyModal } from "./AddCompanyModal";
 import { db } from "@/lib/bridge";
 import {
@@ -8,6 +17,7 @@ import {
   shortDate,
   statusLabel,
   type Accountant,
+  type CertificateCredentials,
   type Company,
   type Invoice,
   type NewCompany,
@@ -25,6 +35,10 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [certificateModalOpen, setCertificateModalOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState(false);
   const shell = useRef<HTMLDivElement>(null);
   const main = useRef<HTMLDivElement>(null);
 
@@ -80,6 +94,40 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
     setSelected(created.id);
   };
 
+  const syncInvoices = async () => {
+    if (!company) return;
+    setSyncing(true);
+    setSyncMessage(null);
+    setSyncError(false);
+    try {
+      const result = await db.syncInvoices(company.id);
+      setInvoices(await db.listInvoices());
+      setSyncMessage(
+        result.imported
+          ? `${result.imported} NFS-e importada(s) e salva(s) localmente.`
+          : "Nenhuma NFS-e nova foi encontrada.",
+      );
+    } catch (cause) {
+      const message =
+        cause instanceof Error ? cause.message : "Não foi possível consultar as NFS-e.";
+      setSyncMessage(message);
+      setSyncError(true);
+      if (message.includes("Selecione novamente o certificado")) {
+        setCertificateModalOpen(true);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const updateCertificate = async (data: CertificateCredentials) => {
+    if (!company) return;
+    const updated = await db.updateCompanyCertificate(company.id, data);
+    setCompanies((previous) => previous.map((item) => (item.id === updated.id ? updated : item)));
+    setSyncError(false);
+    setSyncMessage("Certificado digital atualizado. Você já pode consultar as NFS-e.");
+  };
+
   const metrics = [
     { label: "Notas emitidas", value: String(scoped.length), icon: FileText },
     { label: "Valor acumulado", value: brl(total), icon: Wallet },
@@ -97,7 +145,9 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
             AGNF-E
           </p>
-          <p className="mt-3 text-sm font-semibold text-sidebar-foreground">{accountant.fullName}</p>
+          <p className="mt-3 text-sm font-semibold text-sidebar-foreground">
+            {accountant.fullName}
+          </p>
           <p className="truncate text-xs text-muted-foreground">{accountant.email}</p>
         </div>
 
@@ -162,14 +212,35 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
                 : "Consolidado de todas as empresas do escritório"}
             </p>
           </div>
-          <div className="relative">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              className="input-box w-64 pl-9"
-              value={query}
-              placeholder="Buscar nota ou destinatário"
-              onChange={(e) => setQuery(e.target.value)}
-            />
+          <div className="flex items-center gap-3">
+            {company && (
+              <>
+                <button
+                  onClick={() => setCertificateModalOpen(true)}
+                  className="flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-secondary"
+                >
+                  <KeyRound className="size-4" />
+                  Certificado
+                </button>
+                <button
+                  onClick={() => void syncInvoices()}
+                  disabled={syncing}
+                  className="flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} />
+                  {syncing ? "Consultando…" : "Atualizar NFS-e"}
+                </button>
+              </>
+            )}
+            <div className="relative">
+              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                className="input-box w-64 pl-9"
+                value={query}
+                placeholder="Buscar nota ou destinatário"
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
           </div>
         </header>
 
@@ -216,7 +287,10 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
                 </thead>
                 <tbody>
                   {filtered.map((invoice) => (
-                    <tr key={invoice.id} className="border-b border-border last:border-0 hover:bg-surface">
+                    <tr
+                      key={invoice.id}
+                      className="border-b border-border last:border-0 hover:bg-surface"
+                    >
                       <td className="tabular px-5 py-3 font-medium">{invoice.number}</td>
                       <td className="tabular px-5 py-3 text-muted-foreground">
                         {shortDate(invoice.issuedAt)}
@@ -232,6 +306,15 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
               </table>
             )}
           </section>
+
+          {syncMessage && (
+            <p
+              role="status"
+              className={`text-sm ${syncError ? "text-destructive" : "text-success"}`}
+            >
+              {syncMessage}
+            </p>
+          )}
         </div>
       </main>
 
@@ -240,6 +323,15 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
         onClose={() => setModalOpen(false)}
         onCreate={createCompany}
       />
+      {company && (
+        <AddCompanyModal
+          open={certificateModalOpen}
+          onClose={() => setCertificateModalOpen(false)}
+          onCreate={createCompany}
+          company={company}
+          onUpdateCertificate={updateCertificate}
+        />
+      )}
     </div>
   );
 }

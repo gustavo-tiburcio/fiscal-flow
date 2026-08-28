@@ -1,51 +1,45 @@
 import axios from "axios";
 import https from "https";
 import fs from "fs";
-import { config } from "./config.js";
+import tls from "tls";
 
-// O agente HTTPS (com o certificado carregado) é criado apenas uma vez
-// e reaproveitado entre chamadas.
-//
-// Correção: o código original recriava o https.Agent — e relia o
-// arquivo do certificado do disco — a cada chamada de
-// consultarNFSes(). Isso não chegava a ser um problema com uma única
-// chamada, mas passa a custar caro (I/O + parsing do PFX) assim que
-// passamos a paginar em loop.
-let agenteHttps = null;
+const ADN_BASE_URL = "http://adn.nfse.gov.br";
 
-function obterAgenteHttps() {
-  if (!agenteHttps) {
-    agenteHttps = new https.Agent({
-      pfx: fs.readFileSync(config.certificado),
-      passphrase: config.senhaCertificado,
-      rejectUnauthorized: true,
-    });
-  }
-  return agenteHttps;
-}
-
-/**
- * Busca um lote de documentos a partir de um NSU.
- * Retorna o corpo (XML) da resposta, ou `null` quando não há
- * conteúdo novo (HTTP 204).
- */
-export async function buscarLoteDFe(nsu) {
-  const url = `${config.baseUrl}/contribuintes/DFe/${nsu}`;
-  console.log("\nConsultando:", url);
+export async function buscarLoteDFe(nsu, config, agenteHttps) {
+  const url = `${ADN_BASE_URL}/contribuintes/DFe/${nsu}`;
 
   const resposta = await axios.get(url, {
-    httpsAgent: obterAgenteHttps(),
+    httpsAgent: agenteHttps,
+    validateStatus: (status) => (status >= 200 && status < 300) || status === 404,
     headers: {
       Accept: "application/xml",
       CNPJ: config.cnpj,
     },
   });
-  
+
   console.log("HTTP Status:", resposta.status);
 
-  if (resposta.status === 204 || !resposta.data) {
+  if (resposta.status === 204 || resposta.status === 404 || !resposta.data) {
     return null;
   }
 
   return resposta.data;
+}
+
+export function criarAgenteHttps(config) {
+  try {
+    const pfx = fs.readFileSync(config.certificado);
+    // Força a leitura agora para apontar senha/certificado inválido antes da
+    // chamada HTTP, em vez de retornar um erro TLS genérico no painel.
+    const secureContext = tls.createSecureContext({ pfx, passphrase: config.senhaCertificado });
+
+    // Não repassa pfx/passphrase ao Agent. Sem um contexto explícito, cada
+    // conexão tenta descriptografar o PFX novamente — origem do ERR_SSL_BAD_DECRYPT
+    // observado no Electron para alguns certificados A1.
+    return new https.Agent({ secureContext, rejectUnauthorized: true });
+  } catch {
+    throw new Error(
+      "Não foi possível abrir o certificado. Verifique se o arquivo existe, se é .pfx/.p12 e se a senha está correta.",
+    );
+  }
 }

@@ -1,8 +1,6 @@
 import { xmlParser, converterArquivoXml } from "../utils/xml.js";
-import { validarNfse } from "./validacaoService.js";
-import { salvarXml } from "./armazenamentoService.js";
+import { extrairNfse, validarNfse } from "./validacaoService.js";
 import { montarObjetos } from "./montadorService.js";
-
 
 export async function processarDocumento(doc, nsuLote) {
   const nsuDoc = doc.nsu ?? nsuLote;
@@ -14,7 +12,7 @@ export async function processarDocumento(doc, nsuLote) {
   }
 
   let nfseObj = null;
-  
+
   try {
     nfseObj = xmlParser.parse(xml);
   } catch (erroParse) {
@@ -22,9 +20,15 @@ export async function processarDocumento(doc, nsuLote) {
     return;
   }
 
-  const { valido, motivos } = validarNfse(nfseObj, xml);
-  const caminhoSalvo = salvarXml(xml, doc.chaveAcesso, nsuDoc);
-  console.log(`\nXML salvo em: ${caminhoSalvo}`);
+  const nfse = extrairNfse(nfseObj);
+  if (!nfse) {
+    console.log(
+      `Documento (NSU ${nsuDoc}) ignorado: não contém infNFSe. Raiz XML: ${Object.keys(nfseObj).join(", ") || "desconhecida"}.`,
+    );
+    return null;
+  }
+
+  const { valido, motivos } = validarNfse(nfse, xml);
 
   if (!valido) {
     console.log("NFS-e INVÁLIDA. Motivos:", motivos);
@@ -35,7 +39,6 @@ export async function processarDocumento(doc, nsuLote) {
     console.log("Avisos:", motivos);
   }
 
-  const objetos = montarObjetos({ nfseObj, nsu: nsuDoc, xmlString: xml });
-  console.log("\n===== Objetos extraídos =====");
-  console.log(JSON.stringify(objetos, null, 2));
+  const objetos = montarObjetos({ nfseObj: nfse, nsu: nsuDoc, xmlString: xml });
+  return objetos;
 }

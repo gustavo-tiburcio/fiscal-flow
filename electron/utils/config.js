@@ -1,29 +1,24 @@
-import dotenv from "dotenv";
-
-dotenv.config();
-
 /**
- * Lê uma variável de ambiente obrigatória e lança um erro claro
- * caso ela não esteja definida — no código original, a ausência de
- * uma variável (ex: CERTIFICADO) só se manifestava como um erro
- * críptico de "ENOENT: undefined" no meio da execução.
+ * Dados de autenticação pertencem à empresa cadastrada, nunca ao .env.
+ * A URL da ADN é fixa e fica no cliente HTTP.
  */
-function exigirVariavel(nome) {
-  const valor = process.env[nome];
-  if (!valor) {
-    throw new Error(
-      `Variável de ambiente obrigatória não definida: ${nome}. Verifique seu arquivo .env.`
-    );
+export function criarConfigConsulta(empresa) {
+  if (!empresa?.certificatePath) {
+    throw new Error("Selecione novamente o certificado digital desta empresa.");
   }
-  return valor;
-}
+  if (!empresa.certificatePassword) {
+    throw new Error("A senha do certificado desta empresa não está disponível.");
+  }
+  const cnpj = String(empresa.cnpj ?? "").replace(/\D/g, "");
+  if (cnpj.length !== 14) {
+    throw new Error("O CNPJ cadastrado para esta empresa é inválido.");
+  }
 
-export const config = {
-  certificado: exigirVariavel("CERTIFICADO"),
-  senhaCertificado: exigirVariavel("SENHA_CERTIFICADO"),
-  cnpj: exigirVariavel("CNPJ"),
-  baseUrl: exigirVariavel("BASE_URL"),
-  pastaXml: process.env.PASTA_XML || "./xml",
-  maxIteracoesPaginacao: Number(process.env.MAX_ITERACOES_PAGINACAO || 1),
-  limiteDocumentosPorExecucao: Number(process.env.LIMITE_DOCUMENTOS_POR_EXECUCAO || 1),
-};
+  return {
+    certificado: empresa.certificatePath,
+    senhaCertificado: empresa.certificatePassword,
+    cnpj,
+    maxIteracoesPaginacao: 100,
+    limiteDocumentosPorExecucao: 1000,
+  };
+}

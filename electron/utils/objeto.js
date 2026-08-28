@@ -8,10 +8,23 @@ export function pegar(obj, caminhos) {
     const valor = caminho
       .split(".")
       .reduce(
-        (acc, chave) => (acc !== undefined && acc !== null ? acc[chave] : undefined),
+        (acc, chave) => {
+          if (acc === undefined || acc === null || typeof acc !== "object") return undefined;
+          if (chave in acc) return acc[chave];
+
+          const chaveNormalizada = normalizarChave(chave);
+          const chaveEquivalente = Object.keys(acc).find(
+            (chaveAtual) => normalizarChave(chaveAtual) === chaveNormalizada,
+          );
+          return chaveEquivalente ? acc[chaveEquivalente] : undefined;
+        },
         obj
       );
     if (valor !== undefined && valor !== null && valor !== "") return valor;
   }
   return null;
+}
+
+function normalizarChave(chave) {
+  return String(chave).replace(/[^a-z0-9]/gi, "").toLowerCase();
 }

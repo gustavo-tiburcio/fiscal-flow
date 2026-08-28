@@ -20,6 +20,7 @@ export const companies = sqliteTable("companies", {
   cnpj: text("cnpj").notNull().unique(),
   name: text("name").notNull(),
   certificateFileName: text("certificate_file_name").notNull(),
+  certificatePath: text("certificate_path").notNull(),
   certificatePassword: text("certificate_password").notNull(),
   createdAt: text("created_at")
     .notNull()
@@ -36,4 +37,18 @@ export const invoices = sqliteTable("invoices", {
   recipient: text("recipient").notNull(),
   amount: real("amount").notNull(),
   status: text("status").notNull().default("pending"),
+  nfseId: text("nfse_id"),
+  nsu: text("nsu"),
+  accessKey: text("access_key"),
+  chaveNfse: text("chave_nfse"),
+  numeroNfse: text("numero_nfse"),
+  dataEmissao: text("data_emissao"),
+  competencia: text("competencia"),
+  ambiente: text("ambiente"),
+  nfseStatus: text("nfse_status"),
+  prestadorId: text("prestador_id"),
+  tomadorId: text("tomador_id"),
+  municipioEmissao: text("municipio_emissao"),
+  municipioPrestacao: text("municipio_prestacao"),
+  municipioIss: text("municipio_iss"),
 });

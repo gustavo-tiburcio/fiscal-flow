@@ -1,30 +1,35 @@
-import { config } from "../utils/Config.js";
-import { buscarLoteDFe } from "../utils/Dfeclient.js";
+import { criarConfigConsulta } from "../utils/config.js";
+import { buscarLoteDFe, criarAgenteHttps } from "../utils/dfeClient.js";
 import { xmlParser, encontrarArquivosXml } from "../utils/xml.js";
 import { processarDocumento } from "./processamentoService.js";
 
-function obterNsuInicial(nsuDesejado = 200) {
-  return nsuDesejado - 1;
-}
 
-export async function consultarNFSes(nsuDesejado) {
-  let nsuAtual = obterNsuInicial(nsuDesejado);
+export async function consultarNFSes(empresa, { nsuDesejado = 1, onDocument } = {}) {
+  const config = criarConfigConsulta(empresa);
+  const agenteHttps = criarAgenteHttps(config);
+  let nsuAtual = 1
   let totalDocumentos = 0;
 
-  for (let i = 0; i < 100; i++) {
-    if (totalDocumentos >= limite) break;
+  for (let i = 0; i < config.maxIteracoesPaginacao; i++) {
+    if (totalDocumentos >= config.limiteDocumentosPorExecucao) break;
 
     let dadosResposta;
     try {
-      dadosResposta = await buscarLoteDFe(nsuAtual);
+      dadosResposta = await buscarLoteDFe(nsuAtual, config, agenteHttps);
     } catch (error) {
       if (error.response) {
         console.log("\nErro HTTP:", error.response.status);
         console.log(error.response.data);
-      } else {
-        console.log("Erro na consulta:", error.message);
+        throw new Error(`A consulta de NFS-e falhou (HTTP ${error.response.status}).`);
       }
-      break;
+
+      console.log("Erro na consulta:", error.message);
+      if (error.code === "ERR_SSL_BAD_DECRYPT" || /BAD_DECRYPT/i.test(error.message)) {
+        throw new Error(
+          "Não foi possível desbloquear o certificado digital. Confirme a senha e selecione novamente o arquivo .pfx ou .p12 original.",
+        );
+      }
+      throw error;
     }
 
     if (!dadosResposta) {
@@ -42,8 +47,12 @@ export async function consultarNFSes(nsuDesejado) {
     }
 
     for (const doc of documentos) {
-      await processarDocumento(doc, nsuAtual);
-      totalDocumentos++;
+      if (totalDocumentos >= config.limiteDocumentosPorExecucao) break;
+      const documento = await processarDocumento(doc, nsuAtual);
+      if (documento) {
+        onDocument?.(documento);
+        totalDocumentos++;
+      }
 
       const nsuDoc = Number(doc.nsu);
       if (Number.isFinite(nsuDoc)) {

@@ -11,6 +11,7 @@ export type Company = {
   cnpj: string;
   name: string;
   certificateFileName: string;
+  certificatePath: string;
   certificatePassword: string;
   createdAt: string;
 };
@@ -27,7 +28,28 @@ export type Invoice = {
   recipient: string;
   amount: number;
   status: InvoiceStatus;
+  nfseId?: string | null;
+  nsu?: string | null;
+  accessKey?: string | null;
+  chaveNfse?: string | null;
+  numeroNfse?: string | null;
+  dataEmissao?: string | null;
+  competencia?: string | null;
+  ambiente?: string | null;
+  nfseStatus?: string | null;
+  prestadorId?: string | null;
+  tomadorId?: string | null;
+  municipioEmissao?: string | null;
+  municipioPrestacao?: string | null;
+  municipioIss?: string | null;
 };
+
+export type CertificateSelection = Pick<Company, "certificateFileName" | "certificatePath">;
+export type CertificateCredentials = Pick<
+  Company,
+  "certificateFileName" | "certificatePath" | "certificatePassword"
+>;
+export type InvoiceSyncResult = { fetched: number; imported: number };
 
 export const statusLabel: Record<InvoiceStatus, string> = {
   authorized: "Autorizada",
