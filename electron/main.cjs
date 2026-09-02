@@ -73,8 +73,6 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-    frame: false,
-    fullscreenable: true,
   });
 
   const devUrl = process.env.ELECTRON_DEV_URL;
