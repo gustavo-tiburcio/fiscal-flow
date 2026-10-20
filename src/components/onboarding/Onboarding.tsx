@@ -60,7 +60,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
   const cpfValid = isValidCpf(values.cpf);
 
   useEffect(() => {
-    if (!prefs.animations || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!prefs.animations) return;
     const ctx = gsap.context(() => {
       gsap.fromTo("[data-welcome-image]", { scale: 1.045 }, { scale: 1, duration: 2.4, ease: "power2.out" });
       gsap.fromTo("[data-chrome]", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: "power3.out" });
@@ -70,7 +70,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
 
   useEffect(() => {
     inputRef.current?.focus();
-    if (!prefs.animations || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!prefs.animations) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         "[data-anim]",
@@ -90,7 +90,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
   const advance = useCallback((next: () => void) => {
     if (busy.current) return;
     const stage = stageRef.current;
-    if (!stage || !prefs.animations || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!stage || !prefs.animations) {
       next();
       return;
     }
@@ -116,7 +116,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
       email: values.email.trim(),
       cpf: values.cpf,
     });
-    if (!prefs.animations || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!prefs.animations) {
       onDone(accountant);
       return;
     }
