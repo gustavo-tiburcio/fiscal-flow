@@ -56,7 +56,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
   const inputRef = useRef<HTMLInputElement>(null);
   const busy = useRef(false);
 
-  const step = steps[index] ?? steps[0];
+  const step = steps[index] ?? { key: "intro" as const, eyebrow: "Bem-vindo", question: "Bem-vindo ao AGNF-E.", hint: "Tudo em ordem. Desde o primeiro passo.", placeholder: undefined, type: undefined };
   const cpfValid = isValidCpf(values.cpf);
 
   useEffect(() => {
