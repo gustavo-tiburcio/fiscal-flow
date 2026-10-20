@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep desktop data resets behind the fiscal IPC bridge and a single SQLite transaction; reject resets during active invoice syncs to prevent data from reappearing.
+- Validate CPF check digits in the shared domain helper; validity here is mathematical, not a government identity or registration lookup.

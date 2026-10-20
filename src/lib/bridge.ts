@@ -17,6 +17,7 @@ import type {
 } from "./domain";
 
 type FiscalBridge = {
+  resetData(): Promise<void>;
   getAccountant(): Promise<Accountant | null>;
   saveAccountant(data: Accountant): Promise<Accountant>;
   listCompanies(): Promise<Company[]>;
@@ -81,6 +82,9 @@ function seedInvoices(companyId: number, cnpj: string): Invoice[] {
 }
 
 const local: FiscalBridge = {
+  async resetData() {
+    window.localStorage.removeItem(KEY);
+  },
   async getAccountant() {
     return read().accountant;
   },
@@ -131,6 +135,12 @@ const local: FiscalBridge = {
 };
 
 export const db: FiscalBridge = {
+  resetData: () => {
+    if (window.fiscal && typeof window.fiscal.resetData !== "function") {
+      return Promise.reject(new Error("Reinicie o aplicativo desktop para carregar a opção de apagar dados."));
+    }
+    return (window.fiscal ?? local).resetData();
+  },
   getAccountant: () => (window.fiscal ?? local).getAccountant(),
   saveAccountant: (d) => (window.fiscal ?? local).saveAccountant(d),
   listCompanies: () => (window.fiscal ?? local).listCompanies(),

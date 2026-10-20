@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("fiscal", {
+  resetData: () => ipcRenderer.invoke("data:reset"),
   getAccountant: () => ipcRenderer.invoke("accountant:get"),
   saveAccountant: (data) => ipcRenderer.invoke("accountant:save", data),
   listCompanies: () => ipcRenderer.invoke("companies:list"),
