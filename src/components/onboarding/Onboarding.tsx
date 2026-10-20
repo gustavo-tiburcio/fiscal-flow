@@ -60,13 +60,22 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
   const cpfValid = isValidCpf(values.cpf);
 
   useEffect(() => {
+    if (!prefs.animations || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo("[data-welcome-image]", { scale: 1.045 }, { scale: 1, duration: 2.4, ease: "power2.out" });
+      gsap.fromTo("[data-chrome]", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: "power3.out" });
+    }, screenRef);
+    return () => ctx.revert();
+  }, [prefs.animations]);
+
+  useEffect(() => {
     inputRef.current?.focus();
     if (!prefs.animations || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         "[data-anim]",
-        { opacity: 0, y: 18 },
-        { opacity: 1, y: 0, duration: 0.65, ease: "power3.out", stagger: 0.11 },
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", stagger: 0.14 },
       );
       gsap.fromTo(
         "[data-progress]",
@@ -146,12 +155,10 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
 
   return (
     <div ref={screenRef} className="relative isolate flex min-h-screen flex-col overflow-hidden bg-background">
-      {step.key === "intro" && (
-        <div className="absolute inset-0 -z-10" aria-hidden="true">
-          <img src={welcomeDesk} width={1536} height={1024} alt="" className="h-full w-full object-cover opacity-30 dark:opacity-10" />
+        <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+          <img data-welcome-image src={welcomeDesk} width={1536} height={1024} alt="" className="h-full w-full object-cover opacity-30 dark:opacity-10" />
         </div>
-      )}
-      <header className="flex items-center justify-between gap-4 px-6 py-6 sm:px-10 sm:py-8">
+      <header data-chrome className="flex items-center justify-between gap-4 px-6 py-6 sm:px-10 sm:py-8">
         <span className="font-mono text-sm font-semibold text-primary">
           AGNF-E
         </span>
@@ -239,7 +246,7 @@ export function Onboarding({ onDone }: { onDone: (accountant: Accountant) => voi
           </div>
         </div>
       </div>
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-5 text-xs text-muted-foreground sm:px-10">
+      <footer data-chrome className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-5 text-xs text-muted-foreground sm:px-10">
         <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-primary" /> Seus dados ficam neste computador.</span>
         <span>Gestão fiscal · AGNF-E</span>
       </footer>
