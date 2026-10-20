@@ -1,4 +1,5 @@
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, test } from "node:test";
+import assert from "node:assert/strict";
 import { db } from "./bridge";
 
 const originalWindow = globalThis.window;
@@ -16,11 +17,11 @@ test("reset removes all fiscal records while preserving unrelated storage", asyn
     localStorage: { getItem: (key: string) => items.get(key) ?? null, removeItem: (key: string) => items.delete(key) },
   } });
   await db.resetData();
-  expect(await db.getAccountant()).toBeNull();
-  expect(await db.listCompanies()).toEqual([]);
-  expect(await db.listInvoices()).toEqual([]);
-  expect(items.has("fiscal.local.v1")).toBe(false);
-  expect(items.get("unrelated")).toBe("keep");
+  assert.equal(await db.getAccountant(), null);
+  assert.deepEqual(await db.listCompanies(), []);
+  assert.deepEqual(await db.listInvoices(), []);
+  assert.equal(items.has("fiscal.local.v1"), false);
+  assert.equal(items.get("unrelated"), "keep");
 });
 
 test("desktop reset uses IPC rather than web storage", async () => {
@@ -30,5 +31,5 @@ test("desktop reset uses IPC rather than web storage", async () => {
     localStorage: { removeItem: () => { throw new Error("Must not clear web data instead of desktop data"); } },
   } });
   await db.resetData();
-  expect(calls).toBe(1);
+  assert.equal(calls, 1);
 });
