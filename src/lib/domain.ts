@@ -76,7 +76,17 @@ export function maskCnpj(value: string) {
     .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
 }
 
-export const isValidCpf = (value: string) => onlyDigits(value).length === 11;
+export function isValidCpf(value: string): boolean {
+  const digits = onlyDigits(value);
+  if (digits.length !== 11 || /^(\d)\1{10}$/.test(digits)) return false;
+  for (const length of [9, 10]) {
+    let sum = 0;
+    for (let i = 0; i < length; i++) sum += Number(digits[i]) * (length + 1 - i);
+    const remainder = (sum * 10) % 11;
+    if (Number(digits[length]) !== (remainder === 10 ? 0 : remainder)) return false;
+  }
+  return true;
+}
 export const isValidCnpj = (value: string) => onlyDigits(value).length === 14;
 
 export const brl = (value: number) =>
