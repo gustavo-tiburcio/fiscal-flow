@@ -1,4 +1,8 @@
-import { Monitor, Moon, RotateCcw, Sun, X } from "lucide-react";
+import { Monitor, Moon, RotateCcw, Sun, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import { db } from "@/lib/bridge";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { usePreferences, type Density, type ThemeMode } from "@/lib/theme";
 import type { Accountant } from "@/lib/domain";
 
@@ -39,14 +43,36 @@ export function SettingsModal({
   accountant,
   companies,
   invoices,
+  onReset,
+  syncing,
 }: {
   open: boolean;
   onClose: () => void;
   accountant: Accountant;
   companies: number;
   invoices: number;
+  onReset: () => void;
+  syncing: boolean;
 }) {
   const prefs = usePreferences();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const erase = async () => {
+    if (deleting || syncing) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await db.resetData();
+      prefs.reset();
+      setConfirmOpen(false);
+      onReset();
+    } catch (cause) {
+      setDeleteError(cause instanceof Error ? cause.message : "Não foi possível apagar os dados. Tente novamente.");
+    } finally {
+      setDeleting(false);
+    }
+  };
   if (!open) return null;
 
   return (
@@ -75,6 +101,13 @@ export function SettingsModal({
             <span className="tabular text-sm text-muted-foreground">
               {companies} empresa(s) · {invoices} nota(s)
             </span>
+          </Row>
+
+          <Row title="Apagar todas as informações" description="Remove seu cadastro, empresas, notas e preferências.">
+            <Button variant="destructive" size="sm" disabled={syncing} onClick={() => { setDeleteError(null); setConfirmOpen(true); }}>
+              <Trash2 /> Apagar dados
+            </Button>
+            {syncing && <p className="w-full text-xs text-muted-foreground">Aguarde a consulta de notas terminar.</p>}
           </Row>
 
           <p className="field-label mt-6">Aparência</p>
@@ -176,6 +209,23 @@ export function SettingsModal({
           </button>
         </footer>
       </div>
+      <AlertDialog open={confirmOpen} onOpenChange={(value) => { if (!deleting) setConfirmOpen(value); }}>
+        <AlertDialogContent className="w-[calc(100%-2rem)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar todas as informações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Seu cadastro, todas as empresas, notas fiscais, senhas de certificados salvas e preferências serão removidos deste aplicativo. Você voltará à tela de boas-vindas. Esta ação não pode ser desfeita. Os arquivos originais dos certificados não serão apagados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && <p role="alert" className="text-sm text-destructive">{deleteError}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <Button variant="destructive" disabled={deleting || syncing} onClick={() => void erase()}>
+              <Trash2 />{deleting ? "Apagando…" : "Sim, apagar tudo"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
