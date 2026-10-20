@@ -16,6 +16,8 @@ export const Route = createFileRoute("/")({
           "Aplicativo desktop para contadores: cadastre empresas, certificados digitais A1 e acompanhe notas fiscais com dados salvos localmente.",
       },
       { property: "og:title", content: "Notafiscal — Gestão de notas fiscais para contadores" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content:
@@ -44,7 +46,7 @@ function App() {
       ) : !accountant ? (
         <Onboarding onDone={setAccountant} />
       ) : (
-        <Dashboard accountant={accountant} />
+        <Dashboard accountant={accountant} onReset={() => setAccountant(null)} />
       )}
     </PreferencesProvider>
   );

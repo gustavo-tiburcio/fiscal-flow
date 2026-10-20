@@ -134,6 +134,16 @@ sqlite.exec(`
 const db = drizzle(sqlite);
 
 module.exports = {
+  resetData() {
+    sqlite.transaction(() => {
+      db.delete(invoices).run();
+      db.delete(companies).run();
+      db.delete(accountants).run();
+      sqlite.exec("DELETE FROM sqlite_sequence WHERE name IN ('invoices', 'companies', 'accountants')");
+    })();
+    sqlite.pragma("wal_checkpoint(TRUNCATE)");
+    sqlite.exec("VACUUM");
+  },
   getAccountant() {
     return db.select().from(accountants).limit(1).all()[0] ?? null;
   },

@@ -62,7 +62,7 @@ const sortOptions: { value: SortFilter; label: string }[] = [
   { value: "lowest", label: "Menor valor" },
 ];
 
-export function Dashboard({ accountant }: { accountant: Accountant }) {
+export function Dashboard({ accountant, onReset }: { accountant: Accountant; onReset: () => void }) {
   const prefs = usePreferences();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -521,6 +521,8 @@ export function Dashboard({ accountant }: { accountant: Accountant }) {
         accountant={accountant}
         companies={companies.length}
         invoices={invoices.length}
+        onReset={onReset}
+        syncing={syncing}
       />
     </div>
   );

@@ -4,9 +4,14 @@ const { pathToFileURL } = require("node:url");
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 
 let store;
+let activeSyncs = 0;
 
 function registerIpc() {
   store = require("./database.cjs");
+  ipcMain.handle("data:reset", () => {
+    if (activeSyncs > 0) throw new Error("Aguarde a consulta de notas terminar antes de apagar os dados.");
+    store.resetData();
+  });
   ipcMain.handle("accountant:get", () => store.getAccountant());
   ipcMain.handle("accountant:save", (_e, data) => store.saveAccountant(data));
   ipcMain.handle("companies:list", () => store.listCompanies());
@@ -36,6 +41,8 @@ function registerIpc() {
     const company = store.getCompany(companyId);
     if (!company) throw new Error("Empresa não encontrada.");
 
+    activeSyncs++;
+    try {
     const { consultarNFSes } = await import(
       pathToFileURL(path.join(__dirname, "services", "consultaService.js")).href
     );
@@ -45,6 +52,9 @@ function registerIpc() {
     });
     const imported = store.upsertInvoices(company.id, documents);
     return { fetched, imported };
+    } finally {
+      activeSyncs--;
+    }
   });
 }
 

@@ -71,7 +71,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const reset = useCallback(() => {
-    window.localStorage.setItem(KEY, JSON.stringify(defaults));
+    window.localStorage.removeItem(KEY);
     setPrefs(defaults);
   }, []);
 
